@@ -3,12 +3,16 @@
 :: Use this in scheduled tasks for 5000 after signing completes.
 
 setlocal
-set "PYTHON=C:\Users\zqmco\AppData\Local\Programs\Python\Python312\pythonw.exe"
-set "SCRIPT=C:\Users\zqmco\OneDrive\Desktop\zqm-node-02-indexer\app.py"
-set "WD=C:\Users\zqmco\OneDrive\Desktop\zqm-node-02-indexer"
+set "PYTHON=pythonw.exe"
+set "SCRIPT=%~dp0app.py"
+set "WD=%~dp0"
 
 if not exist "%PYTHON%" (
-    echo ERROR: Python not found: %PYTHON%
+    set "PYTHON=python.exe"
+)
+
+if not exist "%PYTHON%" (
+    echo ERROR: Python not found in PATH.
     pause
     exit /b 1
 )

@@ -12,7 +12,7 @@ schtasks /query /fo CSV /v | findstr /i "ZQM-Node-02-Indexer" >nul 2>&1 && (
 )
 
 REM Real daemon path uses project-local venv + service wrapper
-set PYTHON_EXE=C:\Users\zqmco\AppData\Local\Programs\Python\Python312\python.exe
+set PYTHON_EXE=python.exe
 set SERVICE_SCRIPT=%~dp0zqm_node_service.py
 set PROJECT_DIR=%~dp0
 

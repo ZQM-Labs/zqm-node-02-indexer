@@ -173,29 +173,36 @@ def get_metadata_stats():
     finally:
         conn.close()
 
-# Default scan roots: entire C: drive system directories
+# Default scan roots: user data and app locations
 DEFAULT_SCAN_ROOTS = [
-    "C:\\PerfLogs",
     "C:\\Program Files",
     "C:\\Program Files (x86)",
     "C:\\Users",
-    "C:\\Windows",
     "C:\\inetpub",
 ]
 
-# Directories to ALWAYS skip (temp/cache/system/non-text dirs)
-# Matched by directory basename during os.walk
-# Note: os.walk matches these against directory basenames only
-SKIP_DIRS = {
-    "WindowsPowerShell",
-    "__pycache__", ".git", "node_modules", "venv", ".venv", ".npm", ".cargo",
-    "System Volume Information", "$Recycle.Bin",
-    "Temp", "tmp", "cache", "Cache",
-}
-
-# Skip entire root paths by prefix before scanning
+# Never scan these roots
 SKIP_ROOTS = {
     "C:\\PerfLogs",
+    "C:\\Windows",
+}
+
+# Directories to skip during os.walk
+SKIP_DIRS = {
+    "WindowsPowerShell",
+    "__pycache__",
+    ".git",
+    "node_modules",
+    "venv",
+    ".venv",
+    ".npm",
+    ".cargo",
+    "System Volume Information",
+    "$Recycle.Bin",
+    "Temp",
+    "tmp",
+    "cache",
+    "Cache",
 }
 
 SKIP_EXTENSIONS = {

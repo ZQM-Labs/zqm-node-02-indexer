@@ -75,15 +75,14 @@ Or from CLI:
 `config.json` in the project root stores the last scan metadata.
 
 Default scan roots:
-- `C:\PerfLogs` (skipped by default; unskip via `DEFAULT_SCAN_ROOTS`)
 - `C:\Program Files`
 - `C:\Program Files (x86)`
 - `C:\Users`
-- `C:\Windows` content excluded; `C:\Users` is indexed
 - `C:\inetpub`
 
 Skip rules:
 - Skips system/system-like directories by convention
+- `C:\PerfLogs` and `C:\Windows` are excluded from default roots
 - Indexes text-extractable files for content search
 - Skips very large files above `MAX_FILE_SIZE`
 

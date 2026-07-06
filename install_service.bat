@@ -17,7 +17,7 @@ echo Installing service...
 echo.
 
 REM Create service using sc.exe
-sc create "ZQM-Node-02-Indexer" binPath= "C:\Users\zqmco\AppData\Local\Programs\Python\Python312\python.exe C:\Users\zqmco\Desktop\zqm-node-02-indexer\indexer.py" start= auto depend= "Tcpip/AF" obj= "LocalSystem" password= ""
+sc create "ZQM-Node-02-Indexer" binPath= "python.exe C:\Users\zqmco\Desktop\zqm-node-02-indexer\indexer.py" start= auto depend= "Tcpip/AF" obj= "LocalSystem" password= ""
 
 REM Set service description
 sc description "ZQM-Node-02-Indexer" "ZQM Node 02 Local File Indexing Service - Provides fast file search across the entire workstation"

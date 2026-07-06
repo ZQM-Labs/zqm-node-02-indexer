@@ -17,19 +17,14 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from indexer import build_index, search_index, search_metadata, get_index_stats, CONFIG_FILE, DEFAULT_SCAN_ROOTS
 
 _BASE = Path(__file__).resolve().parent
-for _candidate in [
-    _BASE,
-    Path(r"C:\Users\zqmco\AppData\Local\hermes\skills\skill-automation-center\scripts"),
-    Path(r"C:\Users\zqmco\AppData\Local\hermes\scripts"),
-]:
-    if str(_candidate) not in sys.path:
-        sys.path.insert(0, str(_candidate))
+def _memory_dir_with_fallback():
+    try:
+        import hermes_constants
+        return Path(hermes_constants.get_hermes_home()) / "memories"
+    except Exception:
+        return Path(os.path.expanduser("~")) / ".local" / "share" / "hermes" / "memories"
 
-try:
-    from hermes_constants import get_hermes_home as _get_hermes_home
-    _HERMES_MEMORY_DIR = Path(_get_hermes_home()) / "memories"
-except Exception:
-    _HERMES_MEMORY_DIR = Path(os.path.expanduser("~")) / ".local" / "share" / "hermes" / "memories"
+_HERMES_MEMORY_DIR = _memory_dir_with_fallback()
 
 try:
     import zqm_auth
@@ -37,6 +32,9 @@ try:
 except Exception:
     _AUTH_TOKEN = os.environ.get("ZQM_SERVICE_TOKEN", "")
     zqm_auth = None
+
+if _BASE not in sys.path:
+    sys.path.insert(0, str(_BASE))
 
 _INDEX_FIELDS = {"filename", "filetype", "path", "size", "modified"}
 CANONICAL_CONFIG_KEYS = {
@@ -339,7 +337,7 @@ def api_memory():
 def api_health():
     """Health check for local dashboards."""
     try:
-        stats = get_index_stats()
+        stats = get_index_stats() or {}
     except Exception:
         stats = {}
     return jsonify({

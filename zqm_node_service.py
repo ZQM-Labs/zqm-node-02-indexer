@@ -89,5 +89,5 @@ class IndexerService(win32serviceutil.ServiceFramework):
 
 if __name__ == "__main__":
     if len(sys.argv) == 2 and sys.argv[1].lower() in ("remove", "delete"):
-        pass
+        sys.argv[1] = "remove"
     win32serviceutil.HandleCommandLine(IndexerService)

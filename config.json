@@ -1,10 +1,8 @@
 {
   "root_paths": [
-    "C:\\PerfLogs",
     "C:\\Program Files",
     "C:\\Program Files (x86)",
     "C:\\Users",
-    "C:\\Windows",
     "C:\\inetpub"
   ],
   "last_indexed": "2026-07-05T16:25:44.209973",

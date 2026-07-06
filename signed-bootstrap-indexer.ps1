@@ -7,9 +7,15 @@
 [CmdletBinding()]
 param()
 
-$python = 'C:\Users\zqmco\AppData\Local\Programs\Python\Python312\pythonw.exe'
-$script = 'C:\Users\zqmco\OneDrive\Desktop\zqm-node-02-indexer\app.py'
-$wd     = 'C:\Users\zqmco\OneDrive\Desktop\zqm-node-02-indexer'
+$PythonExe = (Get-Command pythonw -ErrorAction SilentlyContinue).Source
+if (-not $PythonExe) {
+    $PythonExe = (Get-Command python -ErrorAction SilentlyContinue).Source
+}
+if (-not $PythonExe) {
+    Write-Error "Python not found in PATH."
+    exit 1
+}
+$script = Join-Path $wd 'app.py'
 
 if (-not (Test-Path $python)) {
     Write-Error "Python not found: $python"

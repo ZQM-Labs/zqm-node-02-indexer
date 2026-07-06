@@ -10,7 +10,14 @@
 
 $TaskName = "ZQM-Node-02-Indexer"
 $ProjectDir = "C:\Users\zqmco\OneDrive\Desktop\zqm-node-02-indexer"
-$PythonExe = "C:\Users\zqmco\AppData\Local\Programs\Python\Python312\pythonw.exe"
+$PythonExe = (Get-Command pythonw -ErrorAction SilentlyContinue).Source
+if (-not $PythonExe) {
+    $PythonExe = (Get-Command python -ErrorAction SilentlyContinue).Source
+}
+if (-not $PythonExe) {
+    Write-Host "ERROR: Python interpreter not found in PATH." -ForegroundColor Red
+    exit 1
+}
 $AppScript = Join-Path $ProjectDir "app.py"
 $LogFile = Join-Path $ProjectDir "service.log"
 

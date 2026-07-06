@@ -1,6 +1,6 @@
-# Python
-__pycache__/
+# Runtime/generated
 *.pyc
+__pycache__/
 .venv/
 venv/
 .env
@@ -19,5 +19,10 @@ desktop.ini
 # Logs/runtime
 logs/*.log
 !logs/.gitkeep
-index/
-templates/*.html
+
+# Index artifacts
+index/*.pst
+index/*.trm
+index/*.seg
+index/*.toc
+index/_MAIN_*

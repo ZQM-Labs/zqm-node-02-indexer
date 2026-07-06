@@ -104,6 +104,16 @@ Results include `source` when coming from metadata fallback:
 - `source: index` — Whoosh BM25 result
 - `source: metadata` — SQLite exact-match/LIKE fallback
 
+## Docs
+- `docs/improvements.md`
+- `docs/runbook.md`
+- `docs/task-list.md`
+
+## Commit discipline
+- One logical change per commit
+- Use `docs:`, `feat:`, `fix:`, `chore:` prefixes
+- Never commit generated runtime artifacts or secrets
+
 ## Windows Notes
 
 - Stored-field corruption on large commits is mitigated with batched writer commits every 500 docs

@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+*.egg-info/
+
+# Node/system
+node_modules/
+.DS_Store
+Thumbs.db
+
+# OneDrive/sync artifacts
+*.tmp
+*.lock
+desktop.ini
+
+# Logs/runtime
+logs/*.log
+!logs/.gitkeep
+index/
+templates/*.html

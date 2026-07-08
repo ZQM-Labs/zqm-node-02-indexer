@@ -17,6 +17,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from indexer import build_index, search_index, search_metadata, get_index_stats, CONFIG_FILE, DEFAULT_SCAN_ROOTS
 
 _BASE = Path(__file__).resolve().parent
+_API_TOKEN = os.environ.get("API_TOKEN", "").strip()
+
 def _memory_dir_with_fallback():
     try:
         import hermes_constants
@@ -80,6 +82,33 @@ def _zqm_user():
         return None
     user, _ = zqm_auth.parse_credentials(request.headers)
     return user
+
+
+def _check_api_token():
+    """Verify API token from Authorization header or token query param."""
+    if not _API_TOKEN:
+        return True  # No token configured, allow all requests
+    
+    # Check Bearer token in Authorization header
+    auth_header = request.headers.get('Authorization', '')
+    if auth_header.startswith('Bearer '):
+        token = auth_header[7:]
+        if token == _API_TOKEN:
+            return True
+    
+    # Check token query parameter (fallback)
+    token_param = request.args.get('token', '')
+    if token_param == _API_TOKEN:
+        return True
+    
+    return False
+
+
+@app.before_request
+def check_auth():
+    """Check API token on all /api/* routes."""
+    if request.path.startswith('/api/') and not _check_api_token():
+        return jsonify({"error": "Unauthorized: invalid or missing API token"}), 401
 
 
 def canonicalize_fields(raw):
@@ -280,34 +309,36 @@ def api_open_file():
         path = data.get("path", "")
         if not path:
             return jsonify({"success": False, "error": "Invalid or missing path"}), 400
-        
+
         # Security: Resolve and validate path to prevent traversal attacks
         try:
             p = Path(path).resolve()
             # Ensure path is absolute and exists
             if not p.is_absolute() or not p.exists() or not p.is_file():
                 return jsonify({"success": False, "error": "Invalid or missing path"}), 400
-            
+
             # Additional security: ensure path is under allowed roots
             allowed_roots = [Path(r).resolve() for r in DEFAULT_SCAN_ROOTS]
             user_home = Path.home().resolve()
             allowed_roots.append(user_home)
-            
+
             is_allowed = any(
-                str(p).startswith(str(root)) 
+                str(p).startswith(str(root))
                 for root in allowed_roots
             )
-            
+
             if not is_allowed:
                 return jsonify({
-                    "success": False, 
+                    "success": False,
                     "error": "Access denied: path outside allowed directories"
                 }), 403
-                
+
         except (OSError, ValueError) as e:
             return jsonify({"success": False, "error": f"Path validation failed: {e}"}), 400
-        
-        os.startfile(str(p))
+
+        # os.startfile is Windows-only; skip in containerized/non-Windows environments
+        if hasattr(os, 'startfile'):
+            os.startfile(str(p))
         return jsonify({"success": True})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -363,11 +394,11 @@ if __name__ == "__main__":
     print(f"  ZQM Node-02 Workstation File Indexer")
     print(f"  Scanning: {DEFAULT_SCAN_ROOTS}")
     print(f"  Hermes memory dir: {_HERMES_MEMORY_DIR}")
-    print(f"  Running at: http://127.0.0.1:{port}")
-    if _AUTH_TOKEN:
-        print(f"  Token: {_AUTH_TOKEN[:16]}...")
+    print(f"  Running at: http://0.0.0.0:{port}")
+    if _API_TOKEN:
+        print(f"  API Token: {_API_TOKEN[:16]}...")
     else:
-        print(f"  Token: (none)")
+        print(f"  API Token: (none - all requests allowed)")
     print(f"  Press Ctrl+C to stop")
     print(f"{'='*60}\n")
 
@@ -375,6 +406,6 @@ if __name__ == "__main__":
 
     try:
         from waitress import serve
-        serve(app, host="127.0.0.1", port=port)
+        serve(app, host="0.0.0.0", port=port)
     except Exception:
-        app.run(host="127.0.0.1", port=port, debug=False)
+        app.run(host="0.0.0.0", port=port, debug=False)

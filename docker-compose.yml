@@ -1,0 +1,32 @@
+# ZQM Node-02 Workstation File Indexer - Docker Compose
+# Access the web UI at http://localhost:5000
+# API endpoints: /api/stats, /api/search?q=<query>, /api/health, etc.
+
+services:
+  indexer:
+    build: .
+    container_name: zqm-indexer
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: "5000"
+      PYTHONUNBUFFERED: "1"
+      API_TOKEN: ${API_TOKEN:-test-secret}
+      ZQM_GPG_KEY: 03080ACE
+    volumes:
+      - indexer_data:/root/.zqm-node-02-indexer
+      - ./config.json:/app/config.json
+      # Uncomment on WSL2 to mount Windows directories (requires `wsl --mount` setup)
+      # - /mnt/c/Program\ Files:/mnt/scan/Program\ Files:ro
+      # - /mnt/c/Users:/mnt/scan/Users:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:5000/api/health?token=${API_TOKEN:-test-secret}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+volumes:
+  indexer_data:
+    driver: local

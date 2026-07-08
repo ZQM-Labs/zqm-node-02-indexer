@@ -1,0 +1,47 @@
+# Windows-specific files and scripts
+*.bat
+*.cmd
+*.ps1
+*.vbs
+install-service.ps1
+rebuild-*.bat
+service-*.bat
+register-task.ps1
+setup_path.bat
+signed-bootstrap-*.ps1
+signed-bootstrap-*.cmd
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+.gitignore
+
+# Logs
+logs/
+
+# Docs
+docs/
+README.md
+persistence-notes.md
+
+# Git
+.git/
+.gitignore

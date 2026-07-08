@@ -8,6 +8,7 @@ import os
 import sys
 import json
 import mimetypes
+import re
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -206,11 +207,12 @@ SKIP_DIRS = {
 }
 
 SKIP_EXTENSIONS = {
-    ".exe", ".dll", ".so", ".dylib", ".bin", ".dat", ".img", ".iso",
+    ".exe", ".dll", ".sys", ".bat", ".cmd", ".ps1", ".vbs", ".js", ".wsf",
+    ".so", ".dylib", ".bin", ".dat", ".img", ".iso",
     ".vhd", ".vmdk", ".pdb", ".lib", ".obj", ".o", ".pyc", ".pyo",
-    ".msi", ".msp", ".cab", ".drv", ".sys", ".ttf", ".fon",
+    ".msi", ".msp", ".cab", ".drv",
+    ".ttf", ".fon",
 }
-
 
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB max for text extraction
 MAX_FILES_PER_SCAN = 50000  # Safety limit
@@ -449,7 +451,7 @@ def build_index(root_paths=None, rebuild=False):
             pass
 
     print("\n" + "=" * 60)
-    print(f"  Scan Complete")
+    print("  Scan Complete")
     print(f"  Files found:   {total_files}")
     print(f"  Files indexed: {indexed_files}")
     print(f"  Files skipped: {skipped_files}")
@@ -460,12 +462,83 @@ def build_index(root_paths=None, rebuild=False):
             print(f"  WARNING: High skip rate detected. Review SKIP_DIRS and SKIP_EXTENSIONS.")
     print("=" * 60)
 
+    try:
+        import orphan_ref as _orphan_ref
+        _orphan_ref.ensure_orphan_tables(METADATA_DB)
+        orphan_summary = {"scanned": 0, "intentional": 0, "unresolved": 0, "suppressed": 0}
+        for repo_root in _orphan_ref.ORPHAN_REPO_ROOTS:
+            repo_count = {"intentional": 0, "unresolved": 0, "suppressed": 0}
+            for dirpath, _, filenames in os.walk(repo_root):
+                dirnames = [d for d in os.listdir(dirpath) if os.path.isdir(os.path.join(dirpath, d))]
+                dirpath_normalized = dirpath
+                try:
+                    dirnames_filtered = [
+                        d for d in dirnames
+                        if d not in _orphan_ref.ORPHAN_REPO_SKIP_DIRS and not d.startswith(".")
+                    ]
+                except Exception:
+                    dirnames_filtered = dirnames
+                for filename in filenames:
+                    filepath = os.path.join(dirpath_normalized, filename)
+                    if any(filename.endswith(ext) for ext in _orphan_ref.ORPHAN_REPO_SKIP_FILES):
+                        continue
+                    try:
+                        with open(filepath, "r", encoding="utf-8", errors="replace") as fh:
+                            content = fh.read()[:200000]
+                    except Exception:
+                        content = ""
+                    forward_refs = []
+                    for pattern in _orphan_ref.ORPHAN_FORWARD_REF_PATTERNS:
+                        try:
+                            if re.search(pattern[0], filepath, re.IGNORECASE):
+                                forward_refs.extend(pattern[1].findall(content))
+                        except Exception:
+                            continue
+                    summary = _orphan_ref.score_file_refs(filepath, forward_refs, content)
+                    if summary["orphan_candidate"] and not summary["intentional"]:
+                        source = "dynamic_orphan"
+                        kind = "unresolved"
+                        reason = summary["reason"]
+                        target_ref = ", ".join(summary["reverse_refs"][:5])
+                        _orphan_ref.upsert_orphan_record(
+                            filepath=filepath,
+                            source=source,
+                            kind=kind,
+                            reason=reason,
+                            target_ref=target_ref,
+                            repo_root=summary["repo"],
+                        )
+                        repo_count["unresolved"] += 1
+                        orphan_summary["unresolved"] += 1
+                    elif summary["intentional"]:
+                        _orphan_ref.upsert_orphan_record(
+                            filepath=filepath,
+                            source="dynamic_orphan",
+                            kind="intentional",
+                            reason=summary["reason"],
+                            target_ref="",
+                            repo_root=summary["repo"],
+                        )
+                        repo_count["intentional"] += 1
+                        orphan_summary["intentional"] += 1
+                    else:
+                        repo_count["suppressed"] += 1
+                        orphan_summary["suppressed"] += 1
+                    orphan_summary["scanned"] += 1
+            try:
+                _orphan_ref.record_repo_scan(repo_root, "ok", repo_count)
+            except Exception:
+                pass
+    except Exception as e:
+        print(f"  Orphan scan skipped: {e}")
+
     config = {
         "root_paths": root_paths,
         "last_indexed": datetime.now().isoformat(),
         "total_files": total_files,
         "indexed_files": indexed_files,
         "skipped_files": skipped_files,
+        "last_orphan_scan_summary": orphan_summary if 'orphan_summary' in locals() else {},
     }
     with open(CONFIG_FILE, "w") as f:
         json.dump(config, f, indent=2)
@@ -595,6 +668,62 @@ def get_index_stats():
         "config": config,
         "status": "ready",
     }
+
+
+def _apply_filters(results, user=None, path_prefix=None, modified_since=None,
+                   filetype=None, min_size_mb=None, limit=None):
+    """Apply post-query filters to a list of result dicts."""
+    if user:
+        user_low = user.lower()
+        results = [r for r in results if user_low in (r.get("path") or "").lower()]
+    if path_prefix:
+        pp = path_prefix.replace("\\", "/").lower()
+        results = [r for r in results if (r.get("path") or "").replace("\\", "/").lower().startswith(pp)]
+    if filetype:
+        ft = filetype.lower()
+        results = [r for r in results if (r.get("filetype") or "").lower() == ft]
+    if min_size_mb is not None:
+        try:
+            min_bytes = int(float(min_size_mb) * 1024 * 1024)
+            results = [r for r in results if (r.get("size") or 0) >= min_bytes]
+        except (TypeError, ValueError):
+            pass
+    if modified_since:
+        try:
+            cutoff = datetime.fromisoformat(modified_since)
+            kept = []
+            for r in results:
+                raw = r.get("modified")
+                if not raw:
+                    continue
+                try:
+                    if datetime.fromisoformat(raw) >= cutoff:
+                        kept.append(r)
+                except Exception:
+                    continue
+            results = kept
+        except Exception:
+            pass
+    if limit is not None:
+        results = results[: int(limit)]
+    return results
+
+
+def search_index_filtered(query_str, limit=50, field=None, fields=None,
+                          user=None, path_prefix=None, modified_since=None,
+                          filetype=None, min_size_mb=None):
+    """Search the index then apply structured filters (user, path, date, type, size)."""
+    base_limit = max(int(limit) if limit is not None else 50, 200)
+    raw = search_index(query_str, limit=base_limit, field=field, fields=fields)
+    return _apply_filters(
+        raw,
+        user=user,
+        path_prefix=path_prefix,
+        modified_since=modified_since,
+        filetype=filetype,
+        min_size_mb=min_size_mb,
+        limit=limit,
+    )
 
 
 if __name__ == "__main__":

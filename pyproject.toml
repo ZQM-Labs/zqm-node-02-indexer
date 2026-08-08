@@ -4,3 +4,11 @@ version = "0.1.0"
 description = "ZQM-Node-02 indexer service"
 requires-python = ">=3.11"
 license = {text = "MIT"}
+
+dependencies = [
+    "zqm-intel-platforms>=0.1.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+ignore = ["Python", "pythoncore-3.14-64", "samples", "data"]

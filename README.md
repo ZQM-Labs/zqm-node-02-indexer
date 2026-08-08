@@ -1,17 +1,17 @@
 # zqm-node-02-indexer
 
-Local full-disk file indexer for Windows workstations. Uses Whoosh for BM25 full-text search and SQLite for metadata exact-match recall fallback.
+Local full-disk file indexer for Windows workstations. Whoosh BM25 full-text search with SQLite metadata exact-match fallback.
 
 ## About
 
-`zqm-node-02-indexer` indexes file content and metadata on a Windows workstation and exposes a search API and web UI. It is designed for offline use on a single host, with the index and metadata DB kept outside OneDrive-synced trees to avoid lock conflicts.
+`zqm-node-02-indexer` indexes file content and metadata on a Windows workstation and exposes a search API and web UI. Designed for offline use on a single host, with the index and metadata DB kept outside OneDrive-synced trees.
 
 ## Installation
 
 ```powershell
-cd C:\Users\zqmco\Desktop\enhance-repos\zqm-node-02-indexer
+cd <repo-root>
 python -m venv .venv
-.\.venv\Scripts\pip install -r requirements.txt
+.\venv\Scripts\pip install -r requirements.txt
 ```
 
 ## Usage
@@ -38,35 +38,21 @@ rebuild-local.bat
 
 Web UI: `http://127.0.0.1:5000`
 
-## Features
+## Notes
 
-- Whoosh BM25 full-text search with SQLite metadata fallback
-- Flask web UI and REST API
-- Incremental and full rebuild indexing
-- Windows service install with auto-start
-- Silent VBS launch without console window
-- Batched Whoosh commits to avoid stored-field corruption
-- Configurable scan roots and skip rules
-- MCP server integration
-
-## API
-
-- `GET /api/search?q=<query>&limit=<n>` — BM25 search
-- `GET /api/hybrid_search?q=<query>&limit=<n>` — hybrid search
-- `GET /api/recall_debug?q=<query>&limit=<n>` — Whoosh vs metadata comparison
-- `GET /api/stats` — index statistics
-- `POST /api/index` — incremental index
-- `POST /api/index` with `{"rebuild": true}` — full rebuild
-- `POST /api/open` with `{"path": "<filepath>"}` — open in Explorer
+- Keep the index outside OneDrive-synced directories
+- Stop the service before package upgrades
+- Use admin shell for service install/control
 
 ## Integration: zqm-intel-platforms
 
-This repo is part of the `zqm-intel-platforms` stack and registers as an MCP server.
+This repo integrates with `zqm-intel-platforms` for shared OSINT/CTI/SIEM/Windows-telemetry primitives.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT — see LICENSE file.
 
 ## Contact
 
-zqmcomputing@gmail.com
+Alex Zelenski — zqmcomputing@gmail.com
+Brand: ZQM Computing / ZQM-Labs

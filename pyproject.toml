@@ -1,0 +1,6 @@
+[project]
+name = "zqm-node-02-indexer"
+version = "0.1.0"
+description = "ZQM-Node-02 indexer service"
+requires-python = ">=3.11"
+license = {text = "MIT"}

@@ -1,5 +1,8 @@
 # zqm-node-02-indexer
 
+[![CI](https://github.com/ZQM-Labs/zqm-node-02-indexer/actions/workflows/ci.yml/badge.svg)](https://github.com/ZQM-Labs/zqm-node-02-indexer/actions/workflows/ci.yml) [![Tests](https://github.com/ZQM-Labs/zqm-node-02-indexer/actions/workflows/tests.yml/badge.svg)](https://github.com/ZQM-Labs/zqm-node-02-indexer/actions/workflows/tests.yml) [![Ruff](https://github.com/ZQM-Labs/zqm-node-02-indexer/actions/workflows/ci.yml/badge.svg)](https://github.com/ZQM-Labs/zqm-node-02-indexer/actions/workflows/ci.yml) [![mypy](https://github.com/ZQM-Labs/zqm-node-02-indexer/actions/workflows/ci.yml/badge.svg)](https://github.com/ZQM-Labs/zqm-node-02-indexer/actions/workflows/ci.yml)
+
+
 Local full-disk file indexer for Windows workstations. Uses Whoosh for BM25 full-text search and SQLite for metadata exact-match recall fallback.
 
 ## About

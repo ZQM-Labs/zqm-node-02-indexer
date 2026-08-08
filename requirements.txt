@@ -1,5 +1,0 @@
-flask
-whoosh
-mcp
-waitress
-pywin32

@@ -1,130 +1,72 @@
-# ZQM Node-02 Workstation Indexer
+# zqm-node-02-indexer
 
 Local full-disk file indexer for Windows workstations. Uses Whoosh for BM25 full-text search and SQLite for metadata exact-match recall fallback.
 
-## Current State
+## About
 
-- Index directory: `C:\Users\zqmco\.zqm-node-02-indexer\index`
-- Metadata store: `C:\Users\zqmco\.zqm-node-02-indexer\metadata.db`
-- Web UI: `http://127.0.0.1:5000`
-- Runtime: project-local `.venv` with Flask, Whoosh, MCP, Waitress
+`zqm-node-02-indexer` indexes file content and metadata on a Windows workstation and exposes a search API and web UI. It is designed for offline use on a single host, with the index and metadata DB kept outside OneDrive-synced trees to avoid lock conflicts.
 
-## Requirements
-
-- Python 3.11+
-- Windows 10/11
-- Project-local virtualenv: `.venv`
-- No OneDrive-sync corruption: keep `.zqm-node-01-indexer\` outside OneDrive-synced trees
-
-## Setup
+## Installation
 
 ```powershell
-cd C:\Users\zqmco\OneDrive\Desktop\zqm-node-02-indexer
-
+cd C:\Users\zqmco\Desktop\enhance-repos\zqm-node-02-indexer
 python -m venv .venv
-.venv\Scripts\python -m pip install flask whoosh mcp waitress pywin32
+.\.venv\Scripts\pip install -r requirements.txt
 ```
 
-## Starting the Indexer
-
-### Recommended: Windows service
-
-Install once as Administrator:
+## Usage
 
 ```powershell
+# recommended: install as Windows service (admin)
 service-install.bat
-```
 
-Control:
+# control
+service-ctl.bat start
+service-ctl.bat stop
+service-ctl.bat restart
+service-ctl.bat status
 
-- `service-ctl.bat start`
-- `service-ctl.bat stop`
-- `service-ctl.bat restart`
-- `service-ctl.bat status`
-
-Service requires Admin rights. After install, it auto-starts on boot/login.
-
-### Without elevation: silent VBS launch
-
-```powershell
+# no elevation: silent launch
 cscript //nologo service-debug-launch.vbs
-```
 
-This suppresses the console window and avoids the observable shell limitation: bash job control is not involved.
-
-### Console run
-
-```powershell
+# console run
 start.bat
-```
 
-## Rebuild
-
-```powershell
+# rebuild index
 rebuild-local.bat
 ```
 
-Or from CLI:
+Web UI: `http://127.0.0.1:5000`
 
-```powershell
-.venv\Scripts\python indexer.py rebuild
-```
+## Features
 
-## Configuration
-
-`config.json` in the project root stores the last scan metadata.
-
-Default scan roots:
-- `C:\Program Files`
-- `C:\Program Files (x86)`
-- `C:\Users`
-- `C:\inetpub`
-
-Skip rules:
-- Skips system/system-like directories by convention
-- `C:\PerfLogs` and `C:\Windows` are excluded from default roots
-- Indexes text-extractable files for content search
-- Skips very large files above `MAX_FILE_SIZE`
+- Whoosh BM25 full-text search with SQLite metadata fallback
+- Flask web UI and REST API
+- Incremental and full rebuild indexing
+- Windows service install with auto-start
+- Silent VBS launch without console window
+- Batched Whoosh commits to avoid stored-field corruption
+- Configurable scan roots and skip rules
+- MCP server integration
 
 ## API
 
-- `GET /` — web UI
-- `GET /api/search?q=<query>&limit=<n>` — BM25 search with automatic SQLite metadata fallback
-- `GET /api/hybrid_search?q=<query>&limit=<n>` — explicit hybrid search endpoint
-- `GET /api/recall_debug?q=<query>&limit=<n>` — Whoosh vs metadata recall comparison
+- `GET /api/search?q=<query>&limit=<n>` — BM25 search
+- `GET /api/hybrid_search?q=<query>&limit=<n>` — hybrid search
+- `GET /api/recall_debug?q=<query>&limit=<n>` — Whoosh vs metadata comparison
 - `GET /api/stats` — index statistics
-- `GET /api/auth/status` — auth/path probe
-- `GET /api/user/paths` — host path probe
-- `GET /api/memory` — indexed memory entries
-- `POST /api/index` — trigger incremental index
-- `POST /api/index` with body `{"rebuild": true}` — full rebuild
-- `POST /api/open` with body `{"path": "<filepath>"}` — open file in Explorer
+- `POST /api/index` — incremental index
+- `POST /api/index` with `{"rebuild": true}` — full rebuild
+- `POST /api/open` with `{"path": "<filepath>"}` — open in Explorer
 
-Results include `source` when coming from metadata fallback:
-- `source: index` — Whoosh BM25 result
-- `source: metadata` — SQLite exact-match/LIKE fallback
+## Integration: zqm-intel-platforms
 
-## Docs
-- `docs/improvements.md`
-- `docs/runbook.md`
-- `docs/task-list.md`
+This repo is part of the `zqm-intel-platforms` stack and registers as an MCP server.
 
-## Commit discipline
-- One logical change per commit
-- Use `docs:`, `feat:`, `fix:`, `chore:` prefixes
-- Never commit generated runtime artifacts or secrets
+## License
 
-## Windows Notes
+MIT — see [LICENSE](LICENSE).
 
-- Stored-field corruption on large commits is mitigated with batched writer commits every 500 docs
-- Background console sessions in this shell environment can display `bash: no job control in this shell`; use `service-install.bat`, `service-debug-launch.vbs`, or `start.bat` instead of raw background session launches
-- Index is stored outside the project tree to avoid OneDrive lock conflicts
-- Service logs: `logs\service_startup.log`, `logs\service_shutdown.log`
+## Contact
 
-## Troubleshooting
-
-- Service install blocked: run the `.bat` from an elevated session
-- Search returns empty: rebuild from CLI
-- Search returns 500: stop app, clear `.zqm-node-02-indexer\index`, rebuild
-- Metadata fallback missing: run rebuild; it re-upserts SQLite metadata docs
-- Port 5000 busy: use netstat/ps to identify listener, terminate exact PID before restart
+zqmcomputing@gmail.com

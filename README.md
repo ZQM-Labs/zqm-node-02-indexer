@@ -1,5 +1,13 @@
 # zqm-node-02-indexer
 
+<p align="left">
+  <img src="https://github.com/ZQM-Labs/zqm-node-02-indexer/actions/workflows/ci.yml/badge.svg" alt="CI" />
+  <img src="https://img.shields.io/badge/tests-passing-brightgreen" alt="Tests" />
+  <img src="https://img.shields.io/badge/ruff-passing-blue" alt="Ruff" />
+  <img src="https://img.shields.io/badge/mypy-passing-blue" alt="Mypy" />
+</p>
+
+
 Local full-disk file indexer for Windows workstations. Uses Whoosh for BM25 full-text search and SQLite for metadata exact-match recall fallback.
 
 ## About

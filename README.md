@@ -70,3 +70,10 @@ MIT — see [LICENSE](LICENSE).
 ## Contact
 
 zqmcomputing@gmail.com
+
+## Related Repositories
+
+- [ZQM-Labs/zqm-local-tools](https://github.com/ZQM-Labs/zqm-local-tools) — local-first attestation and security utilities
+- [ZQM-Labs/ollama-bridge](https://github.com/ZQM-Labs/ollama-bridge) — Ollama MCP bridge for local inference
+- [ZQM-Computing/zqm-ai-master](https://github.com/ZQM-Computing/zqm-ai-master) — FastAPI gateway with Ollama inference and AI council
+- [ZQM-Computing/mesh-forensics](https://github.com/ZQM-Computing/mesh-forensics) — ZQM LAN evidence collection and incident response
